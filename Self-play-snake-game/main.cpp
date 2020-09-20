@@ -1,4 +1,4 @@
-#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
+ï»¿#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 
 using namespace std;
 #include "..\CMUgraphics\CMUgraphics.h"
@@ -31,7 +31,7 @@ using namespace std;
 bool quit = false;
 
 //You can customize these parameters and the parameters in class Output
-int Speed = 50; //The speed of the game, better be multiple of 5
+int Speed = 10; //The more the slower
 bool bourderKills = false;
 
 
@@ -289,7 +289,7 @@ public:
 		body[2] = p2;
 		body[3] = tail;
 		int k = UI.dw / 3;
-		head->SetCord(--k, UI.dh / 2); 
+		head->SetCord(--k, UI.dh / 2);
 		p1->SetCord(--k, UI.dh / 2); grid[UI.dh / 2][k] = 0;
 		p2->SetCord(--k, UI.dh / 2); grid[UI.dh / 2][k] = 0;
 		tail->SetCord(--k, UI.dh / 2); grid[UI.dh / 2][k] = 0;
@@ -380,7 +380,7 @@ public:
 		snake.peekFront(tail);
 		Point t = tail->GetCord();
 		if (h.x != t.x || h.y != t.y)
-			if(grid[h.y][h.x] == 0)
+			if (grid[h.y][h.x] == 0)
 				alive = false;
 
 
@@ -417,10 +417,10 @@ public:
 	void moveSnake(int dir, Target tar)
 	{
 		Point h = head->GetCord();
-		if (dir == UP) {h.y -= 1;}
-		else if (dir == RIGHT) {h.x += 1;}
-		else if (dir == DOWN) {h.y += 1;}
-		else if (dir == LEFT) {h.x -= 1;}
+		if (dir == UP) { h.y -= 1; }
+		else if (dir == RIGHT) { h.x += 1; }
+		else if (dir == DOWN) { h.y += 1; }
+		else if (dir == LEFT) { h.x -= 1; }
 
 		if (!tar.IsEaten(h)) //If the snake didnt eat
 		{
@@ -447,6 +447,10 @@ public:
 			head = np;
 			body[count++] = np;
 		}
+	}
+
+	void killSnake() {
+		alive = false;
 	}
 
 	bool stillalive() const
@@ -537,7 +541,7 @@ double calculateHValue(int row, int col, Pair dest)
 // to destination 
 void tracePath(cell cellDetails[][COL], Pair dest, Snake* snk, Target targ)
 {
-	printf("\nThe Path is ");
+	//printf("\nThe Path is ");
 	int row = dest.first;
 	int col = dest.second;
 
@@ -564,17 +568,8 @@ void tracePath(cell cellDetails[][COL], Pair dest, Snake* snk, Target targ)
 		else if (h_pos_row < p.first) { snk->moveSnake(DOWN, targ); h_pos_row = p.first; }
 		else if (h_pos_col > p.second) { snk->moveSnake(LEFT, targ); h_pos_col = p.second; }
 		else if (h_pos_col < p.second) { snk->moveSnake(RIGHT, targ); h_pos_col = p.second; }
-		
 
-
-		//Speed of the game is customizable
-		/*int cs = targ.GetScore();
-		if (Speed*1.3 - (cs / 10) > Speed)
-			Sleep(Speed*1.3 - (cs / 10));
-		else
-			Sleep(Speed - (cs - Speed * 3) / Speed * 0.3);*/
-
-		Sleep(30);
+		Sleep(Speed);
 	}
 
 	return;
@@ -589,7 +584,7 @@ void aStarSearch(int grid[][COL], Pair src, Pair dest, Snake* snk, Target targ)
 	if (isValid(src.first, src.second) == false)
 	{
 		printf("Source is invalid\n");
-		while (1) {}
+		snk->killSnake();
 		return;
 	}
 
@@ -597,7 +592,7 @@ void aStarSearch(int grid[][COL], Pair src, Pair dest, Snake* snk, Target targ)
 	if (isValid(dest.first, dest.second) == false)
 	{
 		printf("Destination is invalid\n");
-		while (1) {}
+		snk->killSnake();
 		return;
 	}
 
@@ -606,7 +601,7 @@ void aStarSearch(int grid[][COL], Pair src, Pair dest, Snake* snk, Target targ)
 		isUnBlocked(grid, dest.first, dest.second) == false)
 	{
 		printf("Source or the destination is blocked\n");
-		while (1) {}
+		snk->killSnake();
 		return;
 	}
 
@@ -680,15 +675,13 @@ void aStarSearch(int grid[][COL], Pair src, Pair dest, Snake* snk, Target targ)
 
 		/*
 		 Generating all the 4 successor of this cell
-
-			       N
-			       |
-				   |
-		     W----Cell----E
+				   N
 				   |
 				   |
-			       S
-
+			 W----Cell----E
+				   |
+				   |
+				   S
 		 Cell-->Popped Cell (i, j)
 		 N -->  North       (i-1, j)
 		 S -->  South       (i+1, j)
@@ -725,7 +718,7 @@ void aStarSearch(int grid[][COL], Pair src, Pair dest, Snake* snk, Target targ)
 				hNew = calculateHValue(i - 1, j, dest);
 				fNew = gNew + hNew;
 
-				// If it isn’t on the open list, add it to 
+				// If it isnÂ’t on the open list, add it to 
 				// the open list. Make the current square 
 				// the parent of this square. Record the 
 				// f, g, and h costs of the square cell 
@@ -776,7 +769,7 @@ void aStarSearch(int grid[][COL], Pair src, Pair dest, Snake* snk, Target targ)
 				hNew = calculateHValue(i + 1, j, dest);
 				fNew = gNew + hNew;
 
-				// If it isn’t on the open list, add it to 
+				// If it isnÂ’t on the open list, add it to 
 				// the open list. Make the current square 
 				// the parent of this square. Record the 
 				// f, g, and h costs of the square cell 
@@ -826,7 +819,7 @@ void aStarSearch(int grid[][COL], Pair src, Pair dest, Snake* snk, Target targ)
 				hNew = calculateHValue(i, j + 1, dest);
 				fNew = gNew + hNew;
 
-				// If it isn’t on the open list, add it to 
+				// If it isnÂ’t on the open list, add it to 
 				// the open list. Make the current square 
 				// the parent of this square. Record the 
 				// f, g, and h costs of the square cell 
@@ -878,7 +871,7 @@ void aStarSearch(int grid[][COL], Pair src, Pair dest, Snake* snk, Target targ)
 				hNew = calculateHValue(i, j - 1, dest);
 				fNew = gNew + hNew;
 
-				// If it isn’t on the open list, add it to 
+				// If it isnÂ’t on the open list, add it to 
 				// the open list. Make the current square 
 				// the parent of this square. Record the 
 				// f, g, and h costs of the square cell 
@@ -910,7 +903,7 @@ void aStarSearch(int grid[][COL], Pair src, Pair dest, Snake* snk, Target targ)
 	// there is no way to destination cell (due to blockages) 
 	if (foundDest == false) {
 		printf("Failed to find the Destination Cell\n");
-		while (1) {}
+		snk->killSnake();
 	}
 
 	return;
@@ -946,28 +939,28 @@ int main()
 
 	while (!quit)
 	{
-		/*if (snak->move(pOut, *tar))	//If the snake ate the target the "move" function returns true
-		{
-			*/
+		tar->IncScore();		//Incrementing the score
+		Point p = tar->ChangeTarPos();		//Changing target position
+		while (!snak->PosAvailable(p))		//Cheak if it is a valid position
+			p = tar->ChangeTarPos(rand() % 5, rand() % 5);
+		tar->DrawTarget(pOut);		//Drawing the target
+		cs = tar->GetScore();
+		hs = cs > hs ? cs : hs;		//Cheak if it is a high score or not
+		PrintScores(pOut, cs, hs);		//printing scores
 
-
-			tar->IncScore();		//Incrementing the score
-			Point p = tar->ChangeTarPos();		//Changing target position
-			while (!snak->PosAvailable(p))		//Cheak if it is a valid position
-				p = tar->ChangeTarPos(rand() % 5, rand() % 5);
-			tar->DrawTarget(pOut);		//Drawing the target
-			cs = tar->GetScore();
-			hs = cs > hs ? cs : hs;		//Cheak if it is a high score or not
-			PrintScores(pOut, cs, hs);		//printing scores
-
-			temppt = tar->getPosition();
-			tempph = snak->getHeadPosition();
-			aStarSearch(snak->grid, make_pair(tempph.y, tempph.x), make_pair(temppt.y, temppt.x), snak, *tar);
-		/*}
-
-		if (!snak->stillalive())	//If the snake ate itself it return true 
+		temppt = tar->getPosition();
+		tempph = snak->getHeadPosition();
+		aStarSearch(snak->grid, make_pair(tempph.y, tempph.x), make_pair(temppt.y, temppt.x), snak, *tar);
+		
+		if (!snak->stillalive())	//If the snake ate itself it return true
 		{
 			//Deleting last game objects and creating new
+			pOut->PrintMessage("Press any key to restart", UI.width/2 - 120);
+
+			window* w = pOut->GetWindow();
+			w->FlushKeyQueue();
+			char dummy;
+			w->WaitKeyPress(dummy);
 			delete snak;
 			delete tar;
 			tar = new Target;
@@ -977,8 +970,6 @@ int main()
 			cs = tar->GetScore();
 			PrintScores(pOut, cs, hs);
 		}
-		*/
-
-
+		
 	}
 }
