@@ -2,6 +2,7 @@
 
 using namespace std;
 #include "..\CMUgraphics\CMUgraphics.h"
+#include <iostream>
 #include "Queue.h"
 #include "string.h"
 #include <time.h>
@@ -31,7 +32,7 @@ using namespace std;
 bool quit = false;
 
 //You can customize these parameters and the parameters in class Output
-int Speed = 10; //The more the slower
+int Speed = 30; //The more the slower
 bool bourderKills = false;
 
 
@@ -85,8 +86,8 @@ public:
 		UI.wx = 350;
 		UI.wy = 125;
 
-		UI.width = (UI.dw /*+ UI.wx*/) * UI.SnakeSize + 15;
-		UI.height = (UI.dh /*+ UI.wy*/) * UI.SnakeSize + UI.StatusBarHeight + UI.StatusBarLineWidth;
+		UI.width = (UI.dw) * UI.SnakeSize + 15;
+		UI.height = (UI.dh) * UI.SnakeSize + UI.StatusBarHeight + UI.StatusBarLineWidth;
 
 
 		UI.SnakeColor = WHITE;
@@ -275,7 +276,7 @@ public:
 	{
 		for (int ii = 0; ii < ROW; ii++)
 			for (int jj = 0; jj < COL; jj++)
-				grid[ii][jj] = 1;
+				grid[ii][jj] = 0;
 
 		alive = true;
 		CurrentDirection = RIGHT;
@@ -290,9 +291,9 @@ public:
 		body[3] = tail;
 		int k = UI.dw / 3;
 		head->SetCord(--k, UI.dh / 2);
-		p1->SetCord(--k, UI.dh / 2); grid[UI.dh / 2][k] = 0;
-		p2->SetCord(--k, UI.dh / 2); grid[UI.dh / 2][k] = 0;
-		tail->SetCord(--k, UI.dh / 2); grid[UI.dh / 2][k] = 0;
+		p1->SetCord(--k, UI.dh / 2); grid[UI.dh / 2][k] = 1;
+		p2->SetCord(--k, UI.dh / 2); grid[UI.dh / 2][k] = 2;
+		tail->SetCord(--k, UI.dh / 2); grid[UI.dh / 2][k] = 3;
 
 
 		int i = 3;
@@ -309,111 +310,6 @@ public:
 		return head->GetCord();
 	}
 
-	bool move(Output* pout, Target tar)
-	{
-		window* w = pout->GetWindow();
-		Point h = head->GetCord();
-		int org = CurrentDirection;
-
-
-		//If the user gave an action it is processed
-		char current;
-
-		if (w->GetKeyPress(current))
-		{
-			if (current == KEY_UP || current == KEY_UP_c || current == ARROW_UP)
-				CurrentDirection = UP;
-			else if (current == KEY_RIGHT || current == KEY_RIGHT_c || current == ARROW_RIGHT)
-				CurrentDirection = RIGHT;
-			else if (current == KEY_DOWN || current == KEY_DOWN_c || current == ARROW_DOWN)
-				CurrentDirection = DOWN;
-			else if (current == KEY_LEFT || current == KEY_LEFT_c || current == ARROW_LEFT)
-				CurrentDirection = LEFT;
-			else if (current == KEY_QUIT || current == KEY_QUIT_c)
-				quit = true;
-		}
-		else
-			return false;
-
-
-		//If the user entered a reverse direction the snake will keep moving forward
-		if (CurrentDirection == UP && org == DOWN)	CurrentDirection = DOWN;
-		else if (CurrentDirection == RIGHT && org == LEFT)	CurrentDirection = LEFT;
-		else if (CurrentDirection == DOWN && org == UP)	CurrentDirection = UP;
-		else if (CurrentDirection == LEFT && org == RIGHT)	CurrentDirection = RIGHT;
-
-		//Moving the snake
-		if (CurrentDirection == UP)	h.y -= 1;
-		else if (CurrentDirection == RIGHT)	h.x += 1;
-		else if (CurrentDirection == DOWN)	h.y += 1;
-		else if (CurrentDirection == LEFT)	h.x -= 1;
-
-		//If the snake passed the wall it appears from the second one
-		if (h.y < 0)
-		{
-			h.y = UI.dh - 1;
-			alive = false;
-		}
-		else if (h.y > UI.dh - 1)
-		{
-			h.y = 0;
-			alive = false;
-		}
-		else if (h.x < 0)
-		{
-			h.x = UI.dw - 1;
-			alive = false;
-		}
-		else if (h.x > UI.dw - 1)
-		{
-			h.x = 0;
-			alive = false;
-		}
-
-		if (!alive)
-			if (!bourderKills)
-				alive = true;
-
-
-
-		//Cheaking if the snake killed itself
-		snake.peekFront(tail);
-		Point t = tail->GetCord();
-		if (h.x != t.x || h.y != t.y)
-			if (grid[h.y][h.x] == 0)
-				alive = false;
-
-
-		if (!tar.IsEaten(h)) //If the snake didnt eat
-		{
-			BodyPart* par;
-			Point templ = head->GetCord();
-			grid[templ.y][templ.x] = 0;
-			snake.dequeue(par);
-			templ = par->GetCord();
-			grid[templ.y][templ.x] = 1;
-			par->ClearPart(pOut);	//Clear tail
-			par->SetCord(h.x, h.y);	//Set its new coords
-			par->DrawPart(pOut);	//Draw it in the head position
-			snake.enqueue(par);
-			head = par;
-			return false;
-		}
-		else  //If the snake ate
-		{
-			Point templ = head->GetCord();
-			grid[templ.y][templ.x] = 0;
-			BodyPart* np = new BodyPart;	//Adding new part to the snake
-			np->SetCord(h.x, h.y);			//Its coords is the same as the target
-			np->DrawPart(pOut);
-			snake.enqueue(np);
-			head = np;
-			body[count++] = np;
-
-			return true;
-		}
-	}
-
 	void moveSnake(int dir, Target tar)
 	{
 		Point h = head->GetCord();
@@ -422,14 +318,22 @@ public:
 		else if (dir == DOWN) { h.y += 1; }
 		else if (dir == LEFT) { h.x -= 1; }
 
+		for (int ii = 0; ii < ROW; ii++) {
+			for (int jj = 0; jj < COL; jj++) {
+				if (grid[ii][jj] != 0) {
+					grid[ii][jj] = grid[ii][jj] + 1;
+				}
+			}
+		}
+
 		if (!tar.IsEaten(h)) //If the snake didnt eat
 		{
 			BodyPart* par;
 			Point templ = head->GetCord();
-			grid[templ.y][templ.x] = 0;
+			grid[templ.y][templ.x] = 1;
 			snake.dequeue(par);
 			templ = par->GetCord();
-			grid[templ.y][templ.x] = 1;
+			grid[templ.y][templ.x] = 0;
 			par->ClearPart(pOut);	//Clear tail
 			par->SetCord(h.x, h.y);	//Set its new coords
 			par->DrawPart(pOut);	//Draw it in the head position
@@ -439,7 +343,7 @@ public:
 		else  //If the snake ate
 		{
 			Point templ = head->GetCord();
-			grid[templ.y][templ.x] = 0;
+			grid[templ.y][templ.x] = 1;
 			BodyPart* np = new BodyPart;	//Adding new part to the snake
 			np->SetCord(h.x, h.y);			//Its coords is the same as the target
 			np->DrawPart(pOut);
@@ -490,7 +394,7 @@ public:
 typedef pair<int, int> Pair;
 
 // Creating a shortcut for pair<int, pair<int, int>> type 
-typedef pair<double, pair<int, int>> pPair;
+typedef pair<int, pair<double, pair<int, int>>> pPair;
 
 // A structure to hold the neccesary parameters 
 struct cell
@@ -514,13 +418,49 @@ bool isValid(int row, int col)
 
 // A Utility Function to check whether the given cell is 
 // blocked or not 
-bool isUnBlocked(int grid[][COL], int row, int col)
+bool isUnBlocked(int grid[ROW][COL], int row, int col, int movedBlocks)
 {
+
+	if (grid[row][col] == 0)
+		return true;
+
+	int max = 0;
+
+	for (int ii = 0; ii < ROW; ii++) {
+		for (int jj = 0; jj < COL; jj++) {
+			if (grid[ii][jj] > max) {
+				max = grid[ii][jj];
+			}
+		}
+	}
+	max += 1;
+	int tempmax = max - 1;
+
+	pair<int, int> tempcell; //pair<row, col>
+	for (int iii = 0; iii < movedBlocks; iii++) {
+
+		for (int ii = 0; ii < ROW; ii++) {
+			for (int jj = 0; jj < COL; jj++) {
+				if (grid[ii][jj] == (max - 1)) {
+					tempcell = make_pair(ii, jj);
+					max -= 1;
+					break;
+				}
+			}
+			if (tempmax == max) {
+				tempmax -= 1;
+				break;
+			}
+		}
+		if (row == tempcell.first && col == tempcell.second)
+			return true;
+	}
+
 	// Returns true if the cell is not blocked else false 
-	if (grid[row][col] == 1)
-		return (true);
-	else
+	if (grid[row][col] > 0)
 		return (false);
+	else
+		return (true);
 }
 
 // A Utility Function to check whether destination cell has 
@@ -597,8 +537,8 @@ void aStarSearch(int grid[][COL], Pair src, Pair dest, Snake* snk, Target targ)
 	}
 
 	// Either the source or the destination is blocked 
-	if (isUnBlocked(grid, src.first, src.second) == false ||
-		isUnBlocked(grid, dest.first, dest.second) == false)
+	if (isUnBlocked(grid, src.first, src.second, 0) == false ||
+		isUnBlocked(grid, dest.first, dest.second, 0) == false)
 	{
 		printf("Source or the destination is blocked\n");
 		snk->killSnake();
@@ -655,7 +595,7 @@ void aStarSearch(int grid[][COL], Pair src, Pair dest, Snake* snk, Target targ)
 
 	// Put the starting cell on the open list and set its 
 	// 'f' as 0 
-	openList.insert(make_pair(0.0, make_pair(i, j)));
+	openList.insert(make_pair(0, make_pair(0.0, make_pair(i, j))));
 
 	// We set this boolean value as false as initially 
 	// the destination is not reached. 
@@ -669,8 +609,9 @@ void aStarSearch(int grid[][COL], Pair src, Pair dest, Snake* snk, Target targ)
 		openList.erase(openList.begin());
 
 		// Add this vertex to the closed list 
-		i = p.second.first;
-		j = p.second.second;
+		int blockMoved = p.first;
+		i = p.second.second.first;
+		j = p.second.second.second;
 		closedList[i][j] = true;
 
 		/*
@@ -712,7 +653,7 @@ void aStarSearch(int grid[][COL], Pair src, Pair dest, Snake* snk, Target targ)
 			// list or if it is blocked, then ignore it. 
 			// Else do the following 
 			else if (closedList[i - 1][j] == false &&
-				isUnBlocked(grid, i - 1, j) == true)
+				isUnBlocked(grid, i - 1, j, blockMoved) == true)
 			{
 				gNew = cellDetails[i][j].g + 1.0;
 				hNew = calculateHValue(i - 1, j, dest);
@@ -729,8 +670,8 @@ void aStarSearch(int grid[][COL], Pair src, Pair dest, Snake* snk, Target targ)
 				if (cellDetails[i - 1][j].f == FLT_MAX ||
 					cellDetails[i - 1][j].f > fNew)
 				{
-					openList.insert(make_pair(fNew,
-						make_pair(i - 1, j)));
+					openList.insert(make_pair(blockMoved + 1,
+						make_pair(fNew, make_pair(i - 1, j))));
 
 					// Update the details of this cell 
 					cellDetails[i - 1][j].f = fNew;
@@ -763,7 +704,7 @@ void aStarSearch(int grid[][COL], Pair src, Pair dest, Snake* snk, Target targ)
 			// list or if it is blocked, then ignore it. 
 			// Else do the following 
 			else if (closedList[i + 1][j] == false &&
-				isUnBlocked(grid, i + 1, j) == true)
+				isUnBlocked(grid, i + 1, j, blockMoved) == true)
 			{
 				gNew = cellDetails[i][j].g + 1.0;
 				hNew = calculateHValue(i + 1, j, dest);
@@ -780,7 +721,8 @@ void aStarSearch(int grid[][COL], Pair src, Pair dest, Snake* snk, Target targ)
 				if (cellDetails[i + 1][j].f == FLT_MAX ||
 					cellDetails[i + 1][j].f > fNew)
 				{
-					openList.insert(make_pair(fNew, make_pair(i + 1, j)));
+					openList.insert(make_pair(blockMoved + 1,
+						make_pair(fNew, make_pair(i + 1, j))));
 					// Update the details of this cell 
 					cellDetails[i + 1][j].f = fNew;
 					cellDetails[i + 1][j].g = gNew;
@@ -813,7 +755,7 @@ void aStarSearch(int grid[][COL], Pair src, Pair dest, Snake* snk, Target targ)
 			// list or if it is blocked, then ignore it. 
 			// Else do the following 
 			else if (closedList[i][j + 1] == false &&
-				isUnBlocked(grid, i, j + 1) == true)
+				isUnBlocked(grid, i, j + 1, blockMoved) == true)
 			{
 				gNew = cellDetails[i][j].g + 1.0;
 				hNew = calculateHValue(i, j + 1, dest);
@@ -830,8 +772,8 @@ void aStarSearch(int grid[][COL], Pair src, Pair dest, Snake* snk, Target targ)
 				if (cellDetails[i][j + 1].f == FLT_MAX ||
 					cellDetails[i][j + 1].f > fNew)
 				{
-					openList.insert(make_pair(fNew,
-						make_pair(i, j + 1)));
+					openList.insert(make_pair(blockMoved + 1,
+						make_pair(fNew, make_pair(i, j + 1))));
 
 					// Update the details of this cell 
 					cellDetails[i][j + 1].f = fNew;
@@ -865,7 +807,7 @@ void aStarSearch(int grid[][COL], Pair src, Pair dest, Snake* snk, Target targ)
 			// list or if it is blocked, then ignore it. 
 			// Else do the following 
 			else if (closedList[i][j - 1] == false &&
-				isUnBlocked(grid, i, j - 1) == true)
+				isUnBlocked(grid, i, j - 1, blockMoved) == true)
 			{
 				gNew = cellDetails[i][j].g + 1.0;
 				hNew = calculateHValue(i, j - 1, dest);
@@ -882,8 +824,8 @@ void aStarSearch(int grid[][COL], Pair src, Pair dest, Snake* snk, Target targ)
 				if (cellDetails[i][j - 1].f == FLT_MAX ||
 					cellDetails[i][j - 1].f > fNew)
 				{
-					openList.insert(make_pair(fNew,
-						make_pair(i, j - 1)));
+					openList.insert(make_pair(blockMoved + 1,
+						make_pair(fNew, make_pair(i, j - 1))));
 
 					// Update the details of this cell 
 					cellDetails[i][j - 1].f = fNew;
@@ -951,16 +893,18 @@ int main()
 		temppt = tar->getPosition();
 		tempph = snak->getHeadPosition();
 		aStarSearch(snak->grid, make_pair(tempph.y, tempph.x), make_pair(temppt.y, temppt.x), snak, *tar);
-		
-		if (!snak->stillalive())	//If the snake ate itself it return true
+
+		if (!snak->stillalive())
 		{
 			//Deleting last game objects and creating new
-			pOut->PrintMessage("Press any key to restart", UI.width/2 - 120);
-
+			/*
+			pOut->PrintMessage("Press any key to restart", UI.width / 2 - 120);
 			window* w = pOut->GetWindow();
 			w->FlushKeyQueue();
 			char dummy;
 			w->WaitKeyPress(dummy);
+			*/
+
 			delete snak;
 			delete tar;
 			tar = new Target;
@@ -970,6 +914,7 @@ int main()
 			cs = tar->GetScore();
 			PrintScores(pOut, cs, hs);
 		}
-		
+
 	}
 }
+
